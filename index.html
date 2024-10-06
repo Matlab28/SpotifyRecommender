@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Spotify Music Recommender with Gemini AI</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            font-weight: bold;
+            background: linear-gradient(45deg,#33D6FF, #ffff);
+            -webkit-background-clip: text;
+            color: transparent;
+            position: relative;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h1::before {
+            content: 'Music Recommender';
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: transparent;
+            /* Removed white frame effect */
+        }
+
+        #input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #1e1e1e;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            width: 85%;
+            max-width: 450px;
+            margin-top: 20px;
+            transition: filter 0.3s;
+        }
+
+        #input-container input[type="text"], 
+        #input-container button {
+            margin: 8px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+            width: 100%;
+            background-color: #333;
+            color: #e0e0e0;
+        }
+
+        #input-container button {
+            padding: 10px 20px;
+            /* Updated background for better readability */
+            background: linear-gradient(45deg, #22b8dd, #1e1e1e); 
+            color: #ffffff; /* Text color changed for readability */
+            border: none;
+            cursor: pointer;
+            border-radius: 15px;
+            transition: background 0.3s ease;
+        }
+
+        #input-container button:hover {
+            background: linear-gradient(45deg, #20accf, #ffffff);
+        }
+
+        #res {
+            width: 85%;
+            max-width: 450px;
+            margin-top: 15px;
+            text-align: left;
+            white-space: pre-wrap;
+            font-family: Arial, sans-serif;
+            font-size: 0.9em;
+        }
+
+        .spinner {
+            display: none;
+            margin-top: 15px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #20accf;
+            width: 35px;
+            height: 35px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .blur {
+            filter: blur(5px);
+        }
+
+        /* Additional Styling for Spotify Links */
+        .spotify-link {
+            color: #1DB954;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .spotify-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+
+    <!-- <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            font-weight: bold;
+            background: linear-gradient(45deg,#33D6FF, #ffff);
+            -webkit-background-clip: text;
+            color: transparent;
+            position: relative;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h1::before {
+            content: 'Music Recommender';
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: transparent;
+            -webkit-text-stroke: 0.8px white;
+        }
+
+        #input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #1e1e1e;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            width: 85%;
+            max-width: 450px;
+            margin-top: 20px;
+            transition: filter 0.3s;
+        }
+
+        #input-container input[type="text"], 
+        #input-container button {
+            margin: 8px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+            width: 100%;
+            background-color: #333;
+            color: #e0e0e0;
+        }
+
+        #input-container button {
+            padding: 10px 20px;
+            background: linear-gradient(45deg, #33D6FF, #ffff);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 15px;
+            transition: background 0.3s ease;
+        }
+
+        #input-container button:hover {
+            background: linear-gradient(45deg, #22b8dd, #ffff);
+        }
+
+        #res {
+            width: 85%;
+            max-width: 450px;
+            margin-top: 15px;
+            text-align: left;
+            white-space: pre-wrap;
+            font-family: Arial, sans-serif;
+            font-size: 0.9em;
+        }
+
+        .spinner {
+            display: none;
+            margin-top: 15px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #1DB954;
+            width: 35px;
+            height: 35px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .blur {
+            filter: blur(5px);
+        }
+
+        /* Additional Styling for Spotify Links */
+        .spotify-link {
+            color: #1DB954;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .spotify-link:hover {
+            text-decoration: underline;
+        }
+    </style> -->
+</head>
+<body>
+    <div id="input-container">
+        <h1>Music Recommender</h1>
+        <input type="text" id="userInput" placeholder="Enter your music preference (e.g., mood, genre, artist)">
+        <button id="btn">Get Recommendations</button>
+    </div>
+
+    <div class="spinner" id="spinner"></div>
+    <div id="res"></div>
+
+    <!-- Importmap for Google Generative AI -->
+    <script type="importmap">
+        {
+            "imports": {
+                "@google/generative-ai": "https://esm.run/@google/generative-ai"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+
+        // Replace with your actual Google API key
+        const GOOGLE_API_KEY = "AIzaSyB3GRRnXnOsnRJOhPpLQtWvKf4Bs1Hx-nU";
+
+        // Replace with your actual Spotify Authorization Token
+        const SPOTIFY_TOKEN = 'BQD2jdOPOjqtX6yFmJ0eOENkN3gw43pdvj44ljH-vWc-x5ze7Z1C4ZD48Es04CeLKlyAqbgizZOWcW9gpEv5SQf1wBifKBD0N1vej_58kNw74Gj1-KXc-jipEEgsZd49w7FgrCgIeD41-K_RGmUKiETJm55WnjI1xdn4u6BmBoJ-4wsJioHTV00VFGwcC7qMLyAO7npRDjNLrE298SIv2a3mX7hffgwnaDDEyIJnCWX8zkMQ8kZxOSllHkVz1pEYuVYVjd-DUw7ZUqH3SeRm7Pf7wMqC6yvgrLby';
+
+        const genAI = new GoogleGenerativeAI(GOOGLE_API_KEY);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.0-pro" });
+
+        // Function to interact with Spotify Web API
+        async function fetchWebApi(endpoint, method, body) {
+            const res = await fetch(`https://api.spotify.com/${endpoint}`, {
+                headers: {
+                    Authorization: `Bearer ${SPOTIFY_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                method,
+                body: body ? JSON.stringify(body) : null,
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.error.message || 'Spotify API request failed');
+            }
+            return await res.json();
+        }
+
+        // Function to get recommendations based on seed genres, artists, or tracks
+        async function getSpotifyRecommendations(seedGenres = [], seedArtists = [], seedTracks = []) {
+            let endpoint = `v1/recommendations?limit=5`;
+            if (seedGenres.length > 0) {
+                endpoint += `&seed_genres=${seedGenres.join(',')}`;
+            }
+            if (seedArtists.length > 0) {
+                endpoint += `&seed_artists=${seedArtists.join(',')}`;
+            }
+            if (seedTracks.length > 0) {
+                endpoint += `&seed_tracks=${seedTracks.join(',')}`;
+            }
+
+            const recommendations = await fetchWebApi(endpoint, 'GET');
+            return recommendations.tracks;
+        }
+
+        // Function to search for artists and get their IDs
+        async function searchArtist(artistName) {
+            const searchResults = await fetchWebApi(`v1/search?q=${encodeURIComponent(artistName)}&type=artist&limit=1`, 'GET');
+            const artist = searchResults.artists.items[0];
+            return artist ? artist.id : null;
+        }
+
+        // Main function to handle user input, generate recommendations via AI, and fetch Spotify links
+        async function run() {
+            const spinner = document.getElementById('spinner');
+            const inputContainer = document.getElementById('input-container');
+            const resDiv = document.getElementById('res');
+
+            spinner.style.display = 'block';
+            inputContainer.classList.add('blur');
+            resDiv.innerText = '';
+
+            const userInput = document.getElementById('userInput').value.trim();
+
+            if (!userInput) {
+                resDiv.innerText = 'Please enter your music preference.';
+                spinner.style.display = 'none';
+                inputContainer.classList.remove('blur');
+                return;
+            }
+
+            try {
+                const promptMsg = `
+                Based on the user's input, "${userInput}", recommend 5 songs that match their preference. 
+                For each recommended song, provide the song name and the artist name.
+                Format the response as a JSON array with objects containing "song" and "artist" fields.
+                Example:
+                [
+                    {"song": "Song Name 1", "artist": "Artist Name 1"},
+                    {"song": "Song Name 2", "artist": "Artist Name 2"},
+                    ...
+                ]
+                `;
+
+                const aiResult = await model.generateContent(promptMsg);
+                const aiResponse = await aiResult.response;
+                const aiText = await aiResponse.text();
+
+                let recommendations;
+                try {
+                    recommendations = JSON.parse(aiText);
+                } catch (parseError) {
+                    throw new Error('AI response parsing failed. Please ensure the AI returns valid JSON.');
+                }
+
+                if (!Array.isArray(recommendations) || recommendations.length === 0) {
+                    resDiv.innerText = 'No recommendations found from AI.';
+                    return;
+                }
+
+                const enrichedRecommendations = await Promise.all(recommendations.map(async (rec) => {
+                    const trackName = rec.song;
+                    const artistName = rec.artist;
+
+                    const searchEndpoint = `v1/search?q=track:${encodeURIComponent(trackName)} artist:${encodeURIComponent(artistName)}&type=track&limit=1`;
+                    const searchResults = await fetchWebApi(searchEndpoint, 'GET');
+
+                    if (searchResults.tracks.items.length > 0) {
+                        const track = searchResults.tracks.items[0];
+                        return {
+                            song: track.name,
+                            artist: track.artists.map(a => a.name).join(', '),
+                            link: track.external_urls.spotify
+                        };
+                    } else {
+                        return {
+                            song: trackName,
+                            artist: artistName,
+                            link: 'Link not found'
+                        };
+                    }
+                }));
+
+                if (enrichedRecommendations.length > 0) {
+                    const recommendationList = enrichedRecommendations.map(rec => {
+                        return `${rec.song} by ${rec.artist}\nLink: ${rec.link !== 'Link not found' ? `<a href="${rec.link}" target="_blank" class="spotify-link">Play on Spotify</a>` : rec.link}`;
+                    }).join('\n\n');
+
+                    resDiv.innerHTML = recommendationList.replace(/\n/g, '<br>');
+                } else {
+                    resDiv.innerText = 'No recommendations found.';
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                resDiv.innerText = `Error: ${error.message}`;
+            } finally {
+                spinner.style.display = 'none';
+                inputContainer.classList.remove('blur');
+            }
+        }
+
+        document.getElementById('btn').addEventListener('click', run);
+    </script>
+</body>
+</html>
